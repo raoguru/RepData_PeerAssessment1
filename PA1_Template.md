@@ -23,7 +23,8 @@ The variables included in this dataset are:
 * interval: Identifier for the 5-minute interval in which measurement was taken
 
 The dataset was a comma-separated-value (CSV) file and there were a total of 17,568 observations in the dataset. It was downloaded, unzipped and read into a data.frame and processed using the following code:
-```{r, echo=TRUE, eval=FALSE, warning=FALSE, message=FALSE}
+
+```r
 #download and unzip file
 if(!file.exists("activity.zip")) {
         temp <- tempfile()
@@ -33,7 +34,8 @@ if(!file.exists("activity.zip")) {
 }
 ```
 
-```{r, echo=TRUE, eval=TRUE, warning=FALSE, message=FALSE}
+
+```r
 #turn off scientific notation output (i.e., you want 1061 not 0.1061^4)
 options(scipen=999)
 #Load the data
@@ -49,7 +51,8 @@ dt$intervaldt <- as.POSIXct(strptime(paste(dt$date,sprintf("%04d",as.numeric(dt$
 
 This section will report the total and average number of steps take by the individual, ignoring the missing values.
 
-```{r, echo=TRUE, eval=TRUE, warning=FALSE, message=FALSE}
+
+```r
 #Calculate the total number of steps taken per day
 library(dplyr)  #load dplyr
 daily_steps <- dt %>% group_by(date) %>% summarize(sumsteps = sum(steps))
@@ -63,19 +66,18 @@ mediansteps=round(median(daily_steps$sumsteps, na.rm=TRUE),2)
 
 Below is a histogram of the total number of steps take each day.
 
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, message=FALSE}
-print(p1)
-```
+![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-4-1.png)
 
-The individual's average daily total steps,ignoring missing values, was `r round(meansteps,2)`.
-The individual's median daily total steps,ignoring missing values, was `r round(mediansteps,2)`.
+The individual's average daily total steps,ignoring missing values, was 10766.19.
+The individual's median daily total steps,ignoring missing values, was 10765.
 
 
 ### What is the average daily activity pattern?
 
 This section will report a time series plot of the 5-minute interval and the average number of steps taken, averaged across all days, as well as report which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps.
 
-```{r, echo=TRUE, eval=TRUE, warning=FALSE, message=FALSE}
+
+```r
 #this uses the date/time interval to compute mean steps for each 5 minute interval
 time_steps <- dt %>% group_by(interval, intervalt=strftime(intervaldt, format="%H:%M:%S")) %>% summarise(mean = mean(steps, na.rm=TRUE))
 # make a timeseries plot (this uses time interval in H:M instead of the provided intervals and provides for better display), but don't print
@@ -86,23 +88,21 @@ MaxStep<-time_steps[which(time_steps$mean == max(time_steps$mean)), ]
 
 The time-series plot below shows the average total steps taken by the individual over a 24-hour period:
 
-```{r, echo=FALSE,eval=TRUE, warning=FALSE, message=FALSE}
-print(p2)
+![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-6-1.png)
 
-```
-
-Time interval `r MaxStep[1,2]`, contains the maximum number of steps (`r round(MaxStep[1,3],2)`), on average across all the days in the dataset.
+Time interval 08:35:00, contains the maximum number of steps (206.17), on average across all the days in the dataset.
 
 
 ### Imputing missing values
 
 The data has a number of days/intervals where there are missing values (coded as NA). This section imputes missing values to see if the presence of missing days may introduce bias into some calculations or summaries of the data.
 
-There are `r sum(is.na(dt$steps))` missing values (of steps) in the dataset.
+There are 2304 missing values (of steps) in the dataset.
 
 When a value is missing, it was filled with the mean for the 5-minute interval (across all days).  This was created by adding a new variable "stepsfilled" to the original dataset.
 
-```{r,eecho=TRUE,eval=TRUE, warning=FALSE, message=FALSE}
+
+```r
 #copy steps to stepsfilled (including all the missing values - NAs)
 dt$stepsfilled <-dt$steps
 #Get the vector of intervals with missing steps
@@ -115,7 +115,8 @@ dt$stepsfilled[is.na(dt$steps)]<-time_steps$mean[index]
 
 With this new data, histogram, mean and median are computed to assess the impact of imputation on missing data.
 
-```{r,echo=TRUE,eval=TRUE, warning=FALSE, message=FALSE}
+
+```r
 #compute sum of steps for each day
 daily_stepsfilled <- dt %>% group_by(date) %>% summarize(sumstepsfilled = sum(stepsfilled))
 #Make a histogram, but don't print
@@ -127,16 +128,15 @@ medianstepsfilled=round(median(daily_stepsfilled$sumstepsfilled, na.rm=TRUE),2)
 
 Below is a histogram of the total number of steps take each day, similar to the previous histrogram, but with missing values filled in with mean of known values for each interval.
 
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, message=FALSE}
-print(p3)
-```
+![plot of chunk unnamed-chunk-9](figure/unnamed-chunk-9-1.png)
 
-The individual's average daily total steps, with the new dataset, was `r meanstepsfilled`.
-The individual's median daily total steps, with the new dataset, was `r medianstepsfilled`.
+The individual's average daily total steps, with the new dataset, was 10766.19.
+The individual's median daily total steps, with the new dataset, was 10766.19.
 
 *Comparing the two histograms, mean and median values, we see that the frequency in the middle of the distribution has increased due to the additional values, but other than that we don't see significant changes to daily total activity mean or median.*
 
-```{r,echo=TRUE,eval=TRUE, warning=FALSE, message=FALSE}
+
+```r
 #this uses the date/time interval to compute mean steps for each 5 minute interval
 time_stepsfilled <- dt %>% group_by(interval, intervalt=strftime(intervaldt, format="%H:%M:%S")) %>% summarise(mean = mean(stepsfilled, na.rm=TRUE))
 # this creates a time-series graph, but doesn't print
@@ -145,9 +145,7 @@ p4<- ggplot(data=time_stepsfilled,aes(x=as.POSIXct(strptime(time_stepsfilled$int
 
 The time-series plot below shows the average total steps taken by the individual over a 24-hour period, using the new dataset:
 
-```{r, echo=FALSE,eval=TRUE, warning=FALSE, message=FALSE}
-print(p4)
-```
+![plot of chunk unnamed-chunk-11](figure/unnamed-chunk-11-1.png)
 
 *Again, comparing the two time-series plots, we don't see significant changes to average daily activity using mean as an imputing strategy for filling missing information.*
 
@@ -155,7 +153,8 @@ print(p4)
 ### Are there differences in activity patterns between weekdays and weekends?
 
 In this last section, differences in activity patterns between weekdays and weekends will be assessed and compared.
-```{r,echo=TRUE,eval=TRUE, warning=FALSE, message=FALSE}
+
+```r
 #Creates a new factor variable in the dataset with two levels - "weekday" and "weekend" indicating whether a given date is a weekday or weekend day.
 ##assume workday and weekday as followed in the United States
 Wkdays <- c('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday')
@@ -170,8 +169,6 @@ p5<- ggplot(data=time_stepsfilled,aes(x=as.POSIXct(strptime(time_stepsfilled$int
 
 The time-series plot comparison below, using the new dataset, shows the average total steps taken by the individual over a 24-hour period across weekdays (Monday-Friday) and weekend (Saturday and Sunday):
 
-```{r, echo=FALSE,eval=TRUE, warning=FALSE, message=FALSE}
-print(p5)
-```
+![plot of chunk unnamed-chunk-13](figure/unnamed-chunk-13-1.png)
 
 *Comparing the two time-series plots above, it is evident that the individual's peak activity is lowered over the weekend - around 175 steps- versus roughly 225 steps during the weekdays, but there is more activity throughout the daytime (till about 18:00 hours) over the weekend.*
